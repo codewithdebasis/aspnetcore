@@ -14,6 +14,9 @@ HANDLE  ALLOC_CACHE_HANDLER::sm_hHeap;
 // memory block to a FREE_LIST_HEADER*.  The signature is used to guard against
 // double deletion.  We also fill memory with a pattern.
 //
+// Disabling C4324 here; alignment comes from SLIST_ENTRY definition.
+#pragma warning(push)
+#pragma warning(disable:4324)
 class FREE_LIST_HEADER
 {
 public:
@@ -25,9 +28,9 @@ public:
         FREE_SIGNATURE = (('A') | ('C' << 8) | ('a' << 16) | (('$' << 24) | 0x80)),
     };
 };
+#pragma warning(pop)
 
 ALLOC_CACHE_HANDLER::ALLOC_CACHE_HANDLER(
-    VOID
 ) : m_nThreshold(0),
     m_cbSize(0),
     m_pFreeLists(NULL),
@@ -36,7 +39,6 @@ ALLOC_CACHE_HANDLER::ALLOC_CACHE_HANDLER(
 }
 
 ALLOC_CACHE_HANDLER::~ALLOC_CACHE_HANDLER(
-    VOID
 )
 {
     if (m_pFreeLists != NULL)
@@ -77,7 +79,7 @@ ALLOC_CACHE_HANDLER::Initialize(
     //
     m_cbSize = cbSize;
     m_cbSize = max(m_cbSize, sizeof(FREE_LIST_HEADER));
-    
+
     //
     // Round up the block size to a multiple of the size of a LONG (for
     // the fill pattern in Free()).
@@ -99,7 +101,7 @@ ALLOC_CACHE_HANDLER::Initialize(
         }
     } Init;
 #endif
-    
+
     hr = PER_CPU<SLIST_HEADER>::Create(Init,
                                        &m_pFreeLists );
     if (FAILED(hr))
@@ -136,7 +138,6 @@ ALLOC_CACHE_HANDLER::StaticInitialize(
 // static
 VOID
 ALLOC_CACHE_HANDLER::StaticTerminate(
-    VOID
 )
 {
     sm_hHeap = NULL;
@@ -144,7 +145,6 @@ ALLOC_CACHE_HANDLER::StaticTerminate(
 
 VOID
 ALLOC_CACHE_HANDLER::CleanupLookaside(
-    VOID
 )
 /*++
   Description:
@@ -166,15 +166,14 @@ ALLOC_CACHE_HANDLER::CleanupLookaside(
 #if defined(_MSC_VER) && _MSC_VER >= 1600 // VC10
     auto Predicate = [=] (SLIST_HEADER * pListHeader)
     {
-        PSLIST_ENTRY pl;
         LONG NodesToDelete = QueryDepthSList( pListHeader );
 
-        pl = InterlockedPopEntrySList( pListHeader );
+        PSLIST_ENTRY pl = InterlockedPopEntrySList(pListHeader);
         while ( pl != NULL && --NodesToDelete >= 0 )
         {
             InterlockedDecrement( &m_nTotal);
 
-            ::HeapFree( sm_hHeap, 0, pl );
+            HeapFree( sm_hHeap, 0, pl );
 
             pl = InterlockedPopEntrySList(pListHeader);
         }
@@ -211,7 +210,6 @@ ALLOC_CACHE_HANDLER::CleanupLookaside(
 
 LPVOID
 ALLOC_CACHE_HANDLER::Alloc(
-    VOID
 )
 {
     LPVOID pMemory = NULL;
@@ -223,12 +221,13 @@ ALLOC_CACHE_HANDLER::Alloc(
 
         if (pMemory != NULL)
         {
-            FREE_LIST_HEADER* pfl = (FREE_LIST_HEADER*) pMemory;
+            FREE_LIST_HEADER* pfl = static_cast<FREE_LIST_HEADER*>(pMemory);
             //
             // If the signature is wrong then somebody's been scribbling
             // on memory that they've freed.
             //
             DBG_ASSERT(pfl->dwSignature == FREE_LIST_HEADER::FREE_SIGNATURE);
+            (void)pfl;
         }
     }
 
@@ -256,7 +255,7 @@ ALLOC_CACHE_HANDLER::Alloc(
     }
     else
     {
-        FREE_LIST_HEADER* pfl = (FREE_LIST_HEADER*) pMemory;
+        FREE_LIST_HEADER* pfl = static_cast<FREE_LIST_HEADER*>(pMemory);
         pfl->dwSignature = 0; // clear; just in case caller never overwrites
     }
 
@@ -283,9 +282,9 @@ ALLOC_CACHE_HANDLER::Free(
     // Start filling the space beyond the portion overlaid by the initial
     // FREE_LIST_HEADER.  Fill at most 6 DWORDS.
     //
-    LONG* pl = (LONG*) (pfl+1);
+    LONG* pl = reinterpret_cast<LONG*>(pfl + 1);
 
-    for (LONG cb = (LONG)min(6 * sizeof(LONG),m_cbSize) - sizeof(FREE_LIST_HEADER);
+    for (LONG cb = static_cast<LONG>(min(6 * sizeof(LONG), m_cbSize)) - sizeof(FREE_LIST_HEADER);
          cb > 0;
          cb -= sizeof(LONG))
     {
@@ -308,7 +307,7 @@ ALLOC_CACHE_HANDLER::Free(
         // Threshold for free entries is exceeded. Free the object to
         // process pool.
         //
-        ::HeapFree( sm_hHeap, 0, pMemory );
+        HeapFree( sm_hHeap, 0, pMemory );
     }
     else
     {
@@ -321,16 +320,15 @@ ALLOC_CACHE_HANDLER::Free(
 
 DWORD
 ALLOC_CACHE_HANDLER::QueryDepthForAllSLists(
-    VOID
 )
 /*++
 
 Description:
-    
+
     Aggregates the total count of elements in all lists.
-    
+
 Arguments:
-    
+
     None.
 
 Return Value:
@@ -375,7 +373,6 @@ Return Value:
 // static
 BOOL
 ALLOC_CACHE_HANDLER::IsPageheapEnabled(
-    VOID
 )
 {
     BOOL        fRet = FALSE;
@@ -396,7 +393,7 @@ ALLOC_CACHE_HANDLER::IsPageheapEnabled(
     }
 
     //
-    // Create a heap for calling heapwalk 
+    // Create a heap for calling heapwalk
     // otherwise HeapWalk turns off lookasides for a useful heap
     //
     hHeap = ::HeapCreate( 0, 0, 0 );
@@ -405,7 +402,7 @@ ALLOC_CACHE_HANDLER::IsPageheapEnabled(
         fRet = FALSE;
         goto Finished;
     }
-    
+
     fRet = ::HeapLock( hHeap );
     if ( !fRet )
     {

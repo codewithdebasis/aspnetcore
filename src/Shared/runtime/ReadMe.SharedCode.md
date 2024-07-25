@@ -13,7 +13,7 @@ dotnet/aspnetcore code paths:
 - To copy code from dotnet/aspnetcore to dotnet/runtime, set RUNTIME_REPO to the runtime repo root and then run CopyToRuntime.cmd.
 
 ## Building dotnet/runtime code:
-- https://github.com/dotnet/runtime/tree/master/docs/workflow
+- https://github.com/dotnet/runtime/tree/main/docs/workflow
 - Run *build.cmd* from the root once: `PS D:\github\runtime> .\build.cmd -runtimeConfiguration Release  -subset clr+libs`
 - Build the individual projects:
 - `PS D:\github\dotnet\src\libraries\Common\tests> dotnet build`
@@ -34,3 +34,10 @@ dotnet/aspnetcore code paths:
 ### Running dotnet/aspnetcore tests:
 - `(aspnetcore) PS D:\github\aspnetcore\src\Shared\test\Shared.Tests> dotnet test`
 - `(aspnetcore) PS D:\github\aspnetcore\src\servers\Kestrel\core\test> dotnet test`
+
+## GitHub Actions
+
+In dotnet/aspnetcore, the [runtime-sync](https://github.com/dotnet/aspnetcore/actions/workflows/runtime-sync.yml) GitHub action automatically creates PRs to pull in changes from dotnet/runtime.
+
+In dotnet/runtime, the [aspnetcore-sync](https://github.com/dotnet/runtime/actions/workflows/aspnetcore-sync.yml) GitHub action must be run **manually** to create PRs to pull in changes from dotnet/aspnetcore.
+This is expected to be less common.

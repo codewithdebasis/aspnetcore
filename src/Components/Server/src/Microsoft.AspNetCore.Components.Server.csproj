@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <Reference Include="Microsoft.AspNetCore.Components.Endpoints" />
     <Reference Include="Microsoft.AspNetCore.Components.Web" />
     <Reference Include="Microsoft.AspNetCore.DataProtection.Extensions" />
     <Reference Include="Microsoft.AspNetCore.SignalR" />
@@ -23,18 +24,15 @@
     <Reference Include="Microsoft.Extensions.FileProviders.Composite" />
     <Reference Include="Microsoft.Extensions.FileProviders.Embedded" />
     <Reference Include="Microsoft.Extensions.Logging" />
+    <!-- Required for S.T.J source generation -->
+    <Reference Include="System.Text.Json" PrivateAssets="All" />
 
     <Compile Include="$(SharedSourceRoot)ValueStopwatch\*.cs" />
+    <Compile Include="$(SharedSourceRoot)LinkerFlags.cs" LinkBase="Shared" />
+    <Compile Include="$(SharedSourceRoot)\PooledArrayBufferWriter.cs" LinkBase="Shared" />
 
     <!-- Add a project dependency without reference output assemblies to enforce build order -->
     <!-- Applying workaround for https://github.com/microsoft/msbuild/issues/2661 and https://github.com/dotnet/sdk/issues/952 -->
-    <ProjectReference
-      Include="..\..\Web.JS\Microsoft.AspNetCore.Components.Web.JS.npmproj"
-      ReferenceOutputAssemblies="false"
-      SkipGetTargetFrameworkProperties="true"
-      UndefineProperties="TargetFramework"
-      Private="false"
-      Condition="'$(BuildNodeJS)' != 'false' and '$(BuildingInsideVisualStudio)' != 'true'" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -46,25 +44,33 @@
     <_FileProviderTaskAssembly>$(ArtifactsDir)bin\Microsoft.Extensions.FileProviders.Embedded.Manifest.Task\$(Configuration)\netstandard2.0\Microsoft.Extensions.FileProviders.Embedded.Manifest.Task.dll</_FileProviderTaskAssembly>
   </PropertyGroup>
 
-  <UsingTask
-    AssemblyFile="$(_FileProviderTaskAssembly)"
-    TaskName="Microsoft.Extensions.FileProviders.Embedded.Manifest.Task.GenerateEmbeddedResourcesManifest" />
+  <UsingTask AssemblyFile="$(_FileProviderTaskAssembly)" TaskName="Microsoft.Extensions.FileProviders.Embedded.Manifest.Task.GenerateEmbeddedResourcesManifest" />
 
   <ItemGroup>
     <Compile Include="$(ComponentsSharedSourceRoot)src\CacheHeaderSettings.cs" Link="Shared\CacheHeaderSettings.cs" />
     <Compile Include="$(ComponentsSharedSourceRoot)src\ArrayBuilder.cs" LinkBase="Circuits" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\RenderBatchWriter.cs" LinkBase="Circuits" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\ArrayBuilderMemoryStream.cs" LinkBase="Circuits" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\WebRootComponentManager.cs" LinkBase="Circuits" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\WebRootComponentParameters.cs" LinkBase="Circuits" />
     <Compile Include="$(ComponentsSharedSourceRoot)src\ElementReferenceJsonConverter.cs" />
     <Compile Include="$(ComponentsSharedSourceRoot)src\ComponentParametersTypeCache.cs" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\RootComponentOperation.cs" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\RootComponentOperationBatch.cs" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\RootComponentOperationType.cs" />
     <Compile Include="$(ComponentsSharedSourceRoot)src\RootComponentTypeCache.cs" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\DefaultAntiforgeryStateProvider.cs" LinkBase="Forms" />
+    <Compile Include="$(ComponentsSharedSourceRoot)src\WebRendererId.cs" />
 
     <Compile Include="..\..\Shared\src\BrowserNavigationManagerInterop.cs" />
     <Compile Include="..\..\Shared\src\JsonSerializerOptionsProvider.cs" />
-    <Compile Include="..\..\Shared\src\WebEventData.cs" />
+    <Compile Include="..\..\Shared\src\WebEventData\*.cs" LinkBase="WebEventData" />
 
     <Compile Include="$(RepoRoot)src\SignalR\common\Shared\BinaryMessageFormatter.cs" LinkBase="BlazorPack" />
     <Compile Include="$(RepoRoot)src\SignalR\common\Shared\BinaryMessageParser.cs" LinkBase="BlazorPack" />
     <Compile Include="$(RepoRoot)src\SignalR\common\Shared\MemoryBufferWriter.cs" LinkBase="BlazorPack" />
     <Compile Include="$(RepoRoot)src\SignalR\common\Protocols.MessagePack\src\Protocol\MessagePackHubProtocolWorker.cs" LinkBase="BlazorPack" />
+    <Compile Include="$(RepoRoot)src\SignalR\common\Shared\TryGetReturnType.cs" LinkBase="BlazorPack" />
 
     <!-- MessagePack -->
     <Compile Include="$(MessagePackRoot)BufferWriter.cs" LinkBase="BlazorPack\MessagePack" />
@@ -84,18 +90,33 @@
     <Compile Include="$(MessagePackRoot)Utilities.cs" LinkBase="BlazorPack\MessagePack" />
 
     <!-- Shared descriptor infrastructure with MVC -->
+    <Compile Include="$(RepoRoot)src\Shared\Components\ComponentMarker.cs" />
     <Compile Include="$(RepoRoot)src\Shared\Components\ServerComponent.cs" />
     <Compile Include="$(RepoRoot)src\Shared\Components\ComponentParameter.cs" />
     <Compile Include="$(RepoRoot)src\Shared\Components\ServerComponentSerializationSettings.cs" />
-    <Compile Include="$(RepoRoot)src\Shared\Components\ServerComponentMarker.cs" />
+    <Compile Include="$(RepoRoot)src\Shared\Components\PrerenderComponentApplicationStore.cs" />
+    <Compile Include="$(RepoRoot)src\Shared\Components\ProtectedPrerenderComponentApplicationStore.cs" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <BlazorServerJSFile>..\..\Web.JS\dist\$(Configuration)\blazor.server.js</BlazorServerJSFile>
-  </PropertyGroup>
+  <Target Name="_AddEmbeddedBlazor" BeforeTargets="_CalculateEmbeddedFilesManifestInputs">
+    <PropertyGroup>
+      <BlazorServerJSFilename>blazor.server.js</BlazorServerJSFilename>
+      <BlazorServerJSFile Condition=" '$(Configuration)' == 'Debug' ">$(MSBuildThisFileDirectory)..\..\Web.JS\dist\Debug\$(BlazorServerJSFilename)</BlazorServerJSFile>
+      <BlazorServerJSFile Condition=" '$(Configuration)' != 'Debug' ">$(MSBuildThisFileDirectory)..\..\Web.JS\dist\Release\$(BlazorServerJSFilename)</BlazorServerJSFile>
+      <BlazorServerJSFile Condition="!Exists('$(BlazorServerJSFile)') and '$(BuildNodeJS)' != 'true' ">$(RepoRoot)src\submodules\BlazorMinifiedJs\src\$(BlazorServerJSFilename)</BlazorServerJSFile>
+    </PropertyGroup>
+
+    <Warning Condition="!Exists('$(BlazorServerJSFile)')" Text="'$(BlazorServerJSFile)' does not exist. Ensure the JS assets have been build by running 'npm run build' from the repository root." />
+
+    <ItemGroup>
+      <EmbeddedResource Include="$(BlazorServerJSFile)" LogicalName="_framework/$(BlazorServerJSFilename)" />
+      <EmbeddedResource Include="$(BlazorServerJSFile).map" LogicalName="_framework/$(BlazorServerJSFilename).map" Condition="Exists('$(BlazorServerJSFile).map')" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
-    <EmbeddedResource Include="$(BlazorServerJSFile)" LogicalName="_framework/%(Filename)%(Extension)" />
-    <EmbeddedResource Include="$(BlazorServerJSFile).map" LogicalName="_framework/%(Filename)%(Extension)" Condition="Exists('$(BlazorServerJSFile).map')" />
+    <InternalsVisibleTo Include="Microsoft.AspNetCore.Blazor.DevServer" />
+    <InternalsVisibleTo Include="Microsoft.AspNetCore.Components.Server.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
   </ItemGroup>
 </Project>

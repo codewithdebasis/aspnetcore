@@ -1,19 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>ASP.NET Core HTTP feature interface definitions.</Description>
-    <TargetFrameworks>$(DefaultNetFxTargetFramework);netstandard2.0;$(DefaultNetCoreTargetFramework)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(DefaultNetCoreTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DefaultNetCoreTargetFramework)</TargetFramework>
     <IsAspNetCoreApp>true</IsAspNetCoreApp>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>aspnetcore</PackageTags>
-    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
-
   <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Connections.Abstractions" />
+    <Reference Include="Microsoft.Extensions.Features" />
     <Reference Include="Microsoft.Extensions.Primitives" />
-    <Reference Include="System.IO.Pipelines" />
+    <Reference Include="Microsoft.Net.Http.Headers" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@
 
 @inject LazyAssemblyLoader lazyLoader
 
-<Router AppAssembly="@typeof(BasicTestApp.Program).Assembly" AdditionalAssemblies="@lazyLoadedAssemblies" OnNavigateAsync="@OnNavigateAsync" PreferExactMatches="true">
+<Router AppAssembly="@typeof(BasicTestApp.Program).Assembly" AdditionalAssemblies="@lazyLoadedAssemblies" OnNavigateAsync="@OnNavigateAsync">
     <Navigating>
         <div style="padding: 20px;background-color:blue;color:white;" id="loading-banner">
             <p>Loading the requested page...</p>
@@ -12,6 +12,7 @@
     </Navigating>
     <Found Context="routeData">
         <RouteView RouteData="@routeData" />
+        <FocusOnNavigate RouteData="@routeData" Selector="#lazy-page" />
     </Found>
     <NotFound>
         <LayoutView Layout="@typeof(RouterTestLayout)">
@@ -34,20 +35,20 @@
         if (uri.EndsWith("WithLazyAssembly"))
         {
             Console.WriteLine($"Loading assemblies for WithLazyAssembly...");
-            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "Newtonsoft.Json.dll" });
+            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "Newtonsoft.Json.wasm" });
             lazyLoadedAssemblies.AddRange(assemblies);
         }
 
         if (uri.EndsWith("WithLazyLoadedRoutes"))
         {
             Console.WriteLine($"Loading assemblies for WithLazyLoadedRoutes...");
-            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "LazyTestContentPackage.dll" });
+            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "LazyTestContentPackage.wasm" });
             lazyLoadedAssemblies.AddRange(assemblies);
         }
 
         if (uri.EndsWith("Other")) {
             Console.WriteLine($"Loading assemblies for Other...");
-            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "DoesNotExist.dll" });
+            var assemblies = await lazyLoader.LoadAssembliesAsync(new List<string>() { "DoesNotExist.wasm" });
             lazyLoadedAssemblies.AddRange(assemblies);
         }
     }

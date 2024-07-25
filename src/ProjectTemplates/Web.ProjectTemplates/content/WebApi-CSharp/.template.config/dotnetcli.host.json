@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "$schema": "https://json.schemastore.org/dotnetcli.host",
   "symbolInfo": {
     "UseLocalDB": {
       "longName": "use-local-db"
@@ -35,7 +35,7 @@
     "DefaultScope": {
       "longName": "default-scope",
       "shortName": ""
-    },    
+    },
     "Framework": {
       "longName": "framework"
     },
@@ -43,10 +43,16 @@
       "longName": "no-restore",
       "shortName": ""
     },
-    "HttpPort": {
+    "kestrelHttpPort": {
       "isHidden": true
     },
-    "HttpsPort": {
+    "kestrelHttpsPort": {
+      "isHidden": true
+    },
+    "iisHttpPort": {
+      "isHidden": true
+    },
+    "iisHttpsPort": {
       "isHidden": true
     },
     "ExcludeLaunchSettings": {
@@ -75,6 +81,19 @@
     "DisableOpenAPI": {
       "longName": "no-openapi",
       "shortName": ""
+    },
+    "UseProgramMain": {
+      "longName": "use-program-main",
+      "shortName": ""
+    },
+    "UseMinimalAPIs": {
+      "longName": "use-minimal-apis",
+      "shortName": "minimal",
+      "isHidden": true
+    },
+    "UseControllers": {
+      "longName": "use-controllers",
+      "shortName": "controllers"
     }
   },
   "usageExamples": [

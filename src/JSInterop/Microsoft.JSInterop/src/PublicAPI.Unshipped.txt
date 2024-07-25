@@ -1,4 +1,11 @@
 #nullable enable
-Microsoft.JSInterop.Implementation.JSObjectReferenceJsonWorker
-static Microsoft.JSInterop.Implementation.JSObjectReferenceJsonWorker.ReadJSObjectReferenceIdentifier(ref System.Text.Json.Utf8JsonReader reader) -> long
-static Microsoft.JSInterop.Implementation.JSObjectReferenceJsonWorker.WriteJSObjectReference(System.Text.Json.Utf8JsonWriter! writer, Microsoft.JSInterop.Implementation.JSObjectReference! objectReference) -> void
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledObjectReference
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledObjectReference.InvokeUnmarshalled<T0, T1, T2, TResult>(string! identifier, T0 arg0, T1 arg1, T2 arg2) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledObjectReference.InvokeUnmarshalled<T0, T1, TResult>(string! identifier, T0 arg0, T1 arg1) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledObjectReference.InvokeUnmarshalled<T0, TResult>(string! identifier, T0 arg0) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledObjectReference.InvokeUnmarshalled<TResult>(string! identifier) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledRuntime
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledRuntime.InvokeUnmarshalled<T0, T1, T2, TResult>(string! identifier, T0 arg0, T1 arg1, T2 arg2) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledRuntime.InvokeUnmarshalled<T0, T1, TResult>(string! identifier, T0 arg0, T1 arg1) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledRuntime.InvokeUnmarshalled<T0, TResult>(string! identifier, T0 arg0) -> TResult
+*REMOVED*Microsoft.JSInterop.IJSUnmarshalledRuntime.InvokeUnmarshalled<TResult>(string! identifier) -> TResult

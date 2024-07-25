@@ -3,32 +3,30 @@
   <PropertyGroup>
     <Description>Core components of ASP.NET Core networking protocol stack.</Description>
     <TargetFrameworks>$(DefaultNetFxTargetFramework);netstandard2.0;netstandard2.1;$(DefaultNetCoreTargetFramework)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(DefaultNetCoreTargetFramework)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildSourceOnly)' == 'true'">$(DefaultNetCoreTargetFramework)</TargetFrameworks>
     <IsAspNetCoreApp>true</IsAspNetCoreApp>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>aspnetcore</PackageTags>
-    <NoWarn>CS1591;$(NoWarn)</NoWarn>
-    <Nullable>enable</Nullable>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Http.Features" />
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces" Condition="'$(TargetFramework)' != '$(DefaultNetCoreTargetFramework)'" />
+
+    <Reference Include="Microsoft.Extensions.Features" />
+
+    <Reference Include="System.IO.Pipelines" Condition="'$(TargetFramework)' != '$(DefaultNetCoreTargetFramework)'"/>
 
     <Compile Include="$(SharedSourceRoot)ActivatorUtilities\*.cs" />
     <Compile Include="$(SharedSourceRoot)ParameterDefaultValue\*.cs" />
-    <Compile Include="$(SharedSourceRoot)CodeAnalysis\*.cs" />
+    <Compile Include="$(SharedSourceRoot)Debugger\DictionaryDebugView.cs" LinkBase="Shared" />
+    <Compile Include="$(SharedSourceRoot)Debugger\DictionaryItemDebugView.cs" LinkBase="Shared" />
+    <Compile Include="$(SharedSourceRoot)TrimmingAttributes.cs" LinkBase="Shared" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(DefaultNetFxTargetFramework)'">
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(AspNetCoreMajorMinorVersion)' == '6.0' ">
-    <!--
-      Dependency (a transitive reference) was removed in 5.0. Suppression can be
-      removed after 5.0 RTM is released.
-    -->
-    <SuppressBaselineReference Include="System.IO.Pipelines" />
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
 </Project>
